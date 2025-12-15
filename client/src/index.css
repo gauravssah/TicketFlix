@@ -1,0 +1,65 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+
+
+
+@theme {
+  --color-primary: #F84565;
+  --color-primary-dull: #D63854;
+}
+
+
+* {
+  font-family: "Outfit", sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #787777 #1e1e1e;
+}
+
+body {
+  color: white;
+  background-color: #09090B;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+} */
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #A855F7;
+  /* Neon Purple */
+  --color-primary-dull: #7C3AED;
+  /* Deep Purple */
+  --color-accent: #EC4899;
+  /* Neon Pink */
+}
+
+* {
+  font-family: "Outfit", sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #9333EA #0F0F1A;
+}
+
+body {
+  color: #EDE9FE;
+  background-color: #0B0616;
+  /* Deep cinematic dark */
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+::-webkit-calendar-picker-indicator{
+  filter: invert(1);
+}
