@@ -11,11 +11,14 @@ import BlurCircle from "../components/BlurCircle";
 // Utility functions for formatting time & date
 import timeFormat from "../lib/timeFormat";
 import { dateFormat } from "../lib/dateFormat";
+import { useAppContext } from "../context/AppContext";
 
 // ---------------- MY BOOKINGS PAGE COMPONENT ----------------
 function MyBookings() {
   // Currency symbol fetched from environment variable
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user, image_base_url } = useAppContext();
 
   // State to store all user bookings
   const [bookings, setBookings] = useState([]);
@@ -26,14 +29,26 @@ function MyBookings() {
   // ---------------- FETCH USER BOOKINGS ----------------
   // Simulates fetching bookings from backend/API
   const getMyBookings = async () => {
-    setBookings(dummyBookingData); // Load dummy data into state
-    setIsLoading(false); // Disable loading state
+    try {
+      const { data } = await axios.get("/api/user/bookings", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success) {
+        setBookings(data.bookings);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsLoading(false);
   };
 
   // Load bookings when component mounts
   useEffect(() => {
-    getMyBookings();
-  }, []);
+    if (user) {
+      getMyBookings();
+    }
+  }, [user]);
 
   // ---------------- CONDITIONAL RENDERING ----------------
   return !isLoading ? (
@@ -59,7 +74,7 @@ function MyBookings() {
           <div className="flex flex-col md:flex-row">
             {/* Movie Poster */}
             <img
-              src={item.show.movie.poster_path}
+              src={image_base_url + item.show.movie.poster_path}
               alt="poster"
               className="md:max-w-45 aspect-video h-auto object-cover object-bottom rounded"
             />

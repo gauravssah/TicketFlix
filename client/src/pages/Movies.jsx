@@ -9,9 +9,12 @@ import MovieCard from "../components/MovieCard";
 
 // Import background blur design component
 import BlurCircle from "../components/BlurCircle";
+import { useAppContext } from "../context/AppContext";
 
 // Movies Page Component
 function Movies() {
+  const { shows } = useAppContext();
+
   // Check if movies are available in the data
   return dummyShowsData.length > 0 ? (
     // ---------------- MOVIES LIST SECTION ----------------
@@ -25,7 +28,7 @@ function Movies() {
 
       {/* ---------------- MOVIE CARDS GRID ---------------- */}
       <div className="flex flex-wrap max-sm:justify-center gap-8">
-        {dummyShowsData.map((movie) => (
+        {shows.map((movie) => (
           <MovieCard
             movie={movie} // Passing movie data as prop
             key={movie._id} // Unique key for React list rendering

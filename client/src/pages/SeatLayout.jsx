@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 // Dummy data & assets
-import { assets, dummyDateTimeData, dummyShowsData } from "../assets/assets";
+import { assets } from "../assets/assets";
 
 // UI Components
 import Loading from "../components/Loading";
@@ -19,6 +19,7 @@ import isoTimeFormat from "../lib/isoTimeFormat";
 
 // Toast notifications
 import { toast } from "react-hot-toast";
+import { useAppContext } from "../context/AppContext";
 
 // ---------------- SEAT LAYOUT PAGE COMPONENT ----------------
 function SeatLayout() {
@@ -43,20 +44,22 @@ function SeatLayout() {
   // State to store movie + timing details
   const [show, setShow] = useState(null);
 
+  const [occupiedSeats, setOccupiedSeats] = useState([]);
+
   // Used for programmatic navigation
   const navigate = useNavigate();
 
+  const { axios, getToken, user } = useAppContext();
+
   // ---------------- FETCH MOVIE DETAILS ----------------
   const getShow = async () => {
-    // Find the movie based on URL ID
-    const show = dummyShowsData.find((show) => show._id === id);
-
-    // If found, store movie & datetime mapping in state
-    if (show) {
-      setShow({
-        movie: show,
-        dateTime: dummyDateTimeData,
-      });
+    try {
+      const { data } = await axios.get(`/api/show/${id}`);
+      if (data.success) {
+        setShow(data);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -70,6 +73,10 @@ function SeatLayout() {
     // Limit seat selection to max 5 seats
     if (!selectedSeats.includes(seatID) && selectedSeats.length > 4) {
       return toast("You can only select 5 seats");
+    }
+
+    if (occupiedSeats.includes(seatID)) {
+      return toast("This seat is already booked");
     }
 
     // Toggle seat selection (add/remove)
@@ -90,10 +97,16 @@ function SeatLayout() {
 
           return (
             <button
+              disabled={occupiedSeats.includes(seatID)}
               key={seatID}
               onClick={() => handleSeatClick(seatID)}
               className={`h-8 w-8 rounded border border-primary/60 cursor-pointer
-                ${selectedSeats.includes(seatID) && "bg-primary text-white"}`}
+                ${selectedSeats.includes(seatID) && "bg-primary text-white"}
+                ${
+                  occupiedSeats.includes(seatID) &&
+                  "opacity-40 cursor-not-allowed"
+                }
+                `}
             >
               {seatID}
             </button>
@@ -103,28 +116,60 @@ function SeatLayout() {
     </div>
   );
 
-  // ---------------- PROCEED TO CHECKOUT HANDLER ----------------
-  const handleProceed = () => {
-    // Prevent checkout without time
-    if (!selectedTime) {
-      return toast("Please select a show time");
+  const getOccupiedSeats = async () => {
+    try {
+      const { data } = await axios.get(
+        `/api/bookings/seats/${show._id}` // ✅ REAL Mongo ID
+      );
+
+      if (data.success) {
+        setOccupiedSeats(data.occupiedSeats);
+      }
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    // Prevent checkout without seats
-    if (selectedSeats.length === 0) {
-      return toast("Please select at least one seat");
+  const bookTickets = async () => {
+    try {
+      if (!user) return toast.error("Please login to proceed");
+
+      if (!selectedTime || !selectedSeats.length)
+        return toast.error("Please select a time and seats");
+
+      const { data } = await axios.post(
+        "/api/booking/create",
+        {
+          showId: selectedTime.showId,
+          selectedSeats,
+        },
+        {
+          headers: { Authorization: `Bearer ${await getToken()}` },
+        }
+      );
+
+      if (data.success) {
+        await getOccupiedSeats();
+        toast.success(data.message);
+        navigate("/my-bookings");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
     }
-
-    // Navigate to booking page after validation
-    navigate("/my-bookings");
-
-    // (Future Scope: Send selectedSeats & selectedTime to backend)
   };
 
   // ---------------- ON COMPONENT LOAD ----------------
   useEffect(() => {
     getShow();
   }, []);
+
+  useEffect(() => {
+    if (selectedTime) {
+      getOccupiedSeats();
+    }
+  }, [selectedTime]);
 
   // ---------------- CONDITIONAL RENDERING ----------------
   return show ? (
@@ -183,7 +228,7 @@ function SeatLayout() {
 
         {/* ================= PROCEED BUTTON ================= */}
         <button
-          onClick={handleProceed}
+          onClick={bookTickets}
           className="flex items-center gap-1 mt-20 px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-full font-medium cursor-pointer active:scale-95"
         >
           Proceed to Checkout

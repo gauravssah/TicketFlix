@@ -15,11 +15,14 @@ import { dummyShowsData } from "../assets/assets";
 
 // Import MovieCard component to display each movie
 import MovieCard from "./MovieCard";
+import { useAppContext } from "../context/AppContext";
 
 // Featured Movies / Now Showing Section Component
 function FeaturedSection() {
   // Hook used for programmatic navigation
   const navigate = useNavigate();
+
+  const { shows } = useAppContext();
 
   return (
     // ---------------- MAIN FEATURED SECTION CONTAINER ----------------
@@ -47,7 +50,7 @@ function FeaturedSection() {
       {/* ---------------- MOVIE CARD GRID ---------------- */}
       {/* Display only first 4 movies from dummy data */}
       <div className="flex flex-wrap max-sm:justify-center gap-8 mt-8">
-        {dummyShowsData.slice(0, 4).map((show) => (
+        {shows.slice(0, 4).map((show) => (
           <MovieCard key={show._id} movie={show} />
         ))}
       </div>

@@ -12,8 +12,11 @@ import { MenuIcon, SearchIcon, TicketPlus, XIcon } from "lucide-react";
 
 // Clerk authentication hooks & components
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { useAppContext } from "../context/AppContext";
 
 function Navbar() {
+  const { favoriteMovies } = useAppContext();
+
   // State to control mobile menu open/close
   const [isOpen, setIsOpen] = useState(false);
 
@@ -71,9 +74,11 @@ function Navbar() {
         <Link onClick={handleNavClick} to="/releases">
           Releases
         </Link>
-        <Link onClick={handleNavClick} to="/favorite">
-          Favorites
-        </Link>
+        {favoriteMovies.length > 0 && (
+          <Link onClick={handleNavClick} to="/favorite">
+            Favorites
+          </Link>
+        )}
       </div>
 
       {/* ------------------- RIGHT SECTION (SEARCH + AUTH) ------------------- */}

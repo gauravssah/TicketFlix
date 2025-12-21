@@ -9,11 +9,13 @@ import { useNavigate } from "react-router-dom";
 
 // Utility function to format movie duration (minutes → hours & minutes)
 import timeFormat from "../lib/timeFormat";
+import { useAppContext } from "../context/AppContext";
 
 // MovieCard Component receives a single movie as a prop
 function MovieCard({ movie }) {
   // Hook used for programmatic navigation
   const navigate = useNavigate();
+  const { image_base_url } = useAppContext();
 
   return (
     // ---------------- MAIN MOVIE CARD CONTAINER ----------------
@@ -25,7 +27,7 @@ function MovieCard({ movie }) {
           navigate(`/movies/${movie._id}`);
           scrollTo(0, 0);
         }}
-        src={movie.backdrop_path}
+        src={image_base_url + movie.backdrop_path}
         alt="logo"
         className="rounded-lg h-52 w-full object-cover object-bottom-right cursor-pointer"
       />
