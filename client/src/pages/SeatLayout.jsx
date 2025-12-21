@@ -65,26 +65,17 @@ function SeatLayout() {
 
   // ---------------- SEAT SELECTION HANDLER ----------------
   const handleSeatClick = (seatID) => {
-    // Do not allow seat selection before time selection
-    if (!selectedTime) {
-      return toast("Please select time first");
-    }
+    if (!selectedTime) return toast("Please select time first");
 
-    // Limit seat selection to max 5 seats
-    if (!selectedSeats.includes(seatID) && selectedSeats.length > 4) {
+    if (occupiedSeats.includes(seatID)) return;
+
+    if (!selectedSeats.includes(seatID) && selectedSeats.length > 4)
       return toast("You can only select 5 seats");
-    }
 
-    if (occupiedSeats.includes(seatID)) {
-      return toast("This seat is already booked");
-    }
-
-    // Toggle seat selection (add/remove)
-    setSelectedSeats(
-      (prev) =>
-        prev.includes(seatID)
-          ? prev.filter((seat) => seat !== seatID) // remove
-          : [...prev, seatID] // add
+    setSelectedSeats((prev) =>
+      prev.includes(seatID)
+        ? prev.filter((seat) => seat !== seatID)
+        : [...prev, seatID]
     );
   };
 
@@ -119,7 +110,7 @@ function SeatLayout() {
   const getOccupiedSeats = async () => {
     try {
       const { data } = await axios.get(
-        `/api/bookings/seats/${show._id}` // ✅ REAL Mongo ID
+        `/api/bookings/seats/${selectedTime.showId}` // ✅ REAL Mongo ID
       );
 
       if (data.success) {
@@ -165,6 +156,7 @@ function SeatLayout() {
 
   useEffect(() => {
     if (selectedTime) {
+      setSelectedSeats([]);
       getOccupiedSeats();
     }
   }, [selectedTime]);
