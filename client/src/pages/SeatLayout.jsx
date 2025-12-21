@@ -18,7 +18,7 @@ import { ArrowRightIcon, ClockIcon } from "lucide-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
 
 // Toast notifications
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 
 // ---------------- SEAT LAYOUT PAGE COMPONENT ----------------
@@ -149,9 +149,7 @@ function SeatLayout() {
       );
 
       if (data.success) {
-        await getOccupiedSeats();
-        toast.success(data.message);
-        navigate("/my-bookings");
+        window.location.href = data.url;
       } else {
         toast.error(data.message);
       }

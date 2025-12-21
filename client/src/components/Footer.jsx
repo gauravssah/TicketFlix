@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="px-6 pt-8 md:px-16 lg:px-36 w-full text-gray-300 bg-black/40">
+    <footer className="px-6 mt-30 pt-8 md:px-16 lg:px-36 w-full text-gray-300 bg-black/40">
       {/* ---------------- TOP FOOTER SECTION ---------------- */}
       <div className="flex flex-col md:flex-row justify-between w-full gap-10 border-b border-gray-600 pb-10">
         {/* -------- LEFT: LOGO + ABOUT -------- */}
