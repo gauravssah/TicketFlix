@@ -13,6 +13,7 @@ export const stripeWebhooks = async (request, response) => {
         return response.status(400).send(`webhook Error: ${error.message}`);
     }
 
+    // This anot
     try {
         switch (event.type) {
             case "payment_intent.succeeded": {
