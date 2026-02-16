@@ -16,6 +16,11 @@ const AddShows = () => {
   const [dateTimeSelection, setDateTimeSelection] = useState({});
   const [dateTimeInput, setDateTimeInput] = useState("");
   const [showPrice, setShowPrice] = useState("");
+  const [sectionPrices, setSectionPrices] = useState({
+    premium: "",
+    gold: "",
+    silver: "",
+  });
   const [addingShow, setAddingShow] = useState(false);
 
   const fetchNowPlayingMovies = async () => {
@@ -67,19 +72,33 @@ const AddShows = () => {
       if (
         !selectedMovie ||
         Object.keys(dateTimeSelection).length === 0 ||
-        !showPrice
+        !sectionPrices.premium ||
+        !sectionPrices.gold ||
+        !sectionPrices.silver
       ) {
         return toast("Missing required fields");
       }
 
       const showsInput = Object.entries(dateTimeSelection).map(
-        ([date, time]) => ({ date, time })
+        ([date, time]) => ({ date, time }),
+      );
+
+      const avgPrice = Math.round(
+        (Number(sectionPrices.premium) +
+          Number(sectionPrices.gold) +
+          Number(sectionPrices.silver)) /
+          3,
       );
 
       const payload = {
         movieId: selectedMovie,
         showsInput,
-        showPrice: Number(showPrice),
+        showPrice: avgPrice,
+        sectionPrices: {
+          premium: Number(sectionPrices.premium),
+          gold: Number(sectionPrices.gold),
+          silver: Number(sectionPrices.silver),
+        },
       };
 
       const { data } = await axios.post("/api/show/add", payload, {
@@ -91,6 +110,7 @@ const AddShows = () => {
         setSelectedMovie(null);
         setDateTimeSelection({});
         setShowPrice("");
+        setSectionPrices({ premium: "", gold: "", silver: "" });
       } else {
         toast.error(data.message);
       }
@@ -152,22 +172,68 @@ const AddShows = () => {
         </div>
       </div>
 
-      {/* show price input */}
+      {/* Section-based pricing inputs */}
 
       <div className="mt-8">
-        <label className="block text-sm font-medium mb-2" htmlFor="">
-          Show Price
-        </label>
-        <div className=" inline-flex item-center gap-2 border border-gray-600 px-3 py-2 rounded-md">
-          <p className=" text-gray-400 text-sm">{currency}</p>
-          <input
-            min={0}
-            type="number"
-            value={showPrice}
-            onChange={(e) => setShowPrice(e.target.value)}
-            placeholder="Enter Show Price"
-            className=" outline-none"
-          />
+        <label className="block text-sm font-medium mb-3">Section Prices</label>
+        <div className="flex flex-wrap gap-4">
+          {/* Premium */}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-yellow-400">
+              Premium (Rows A-B)
+            </span>
+            <div className="inline-flex items-center gap-2 border border-yellow-500/40 bg-yellow-500/5 px-3 py-2 rounded-md">
+              <p className="text-yellow-400 text-sm">{currency}</p>
+              <input
+                min={0}
+                type="number"
+                value={sectionPrices.premium}
+                onChange={(e) =>
+                  setSectionPrices((p) => ({ ...p, premium: e.target.value }))
+                }
+                placeholder="Price"
+                className="outline-none w-24 bg-transparent"
+              />
+            </div>
+          </div>
+          {/* Gold */}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-primary">
+              Gold (Rows C-F)
+            </span>
+            <div className="inline-flex items-center gap-2 border border-primary/40 bg-primary/5 px-3 py-2 rounded-md">
+              <p className="text-primary text-sm">{currency}</p>
+              <input
+                min={0}
+                type="number"
+                value={sectionPrices.gold}
+                onChange={(e) =>
+                  setSectionPrices((p) => ({ ...p, gold: e.target.value }))
+                }
+                placeholder="Price"
+                className="outline-none w-24 bg-transparent"
+              />
+            </div>
+          </div>
+          {/* Silver */}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-400">
+              Silver (Rows G-J)
+            </span>
+            <div className="inline-flex items-center gap-2 border border-gray-500/40 bg-gray-500/5 px-3 py-2 rounded-md">
+              <p className="text-gray-400 text-sm">{currency}</p>
+              <input
+                min={0}
+                type="number"
+                value={sectionPrices.silver}
+                onChange={(e) =>
+                  setSectionPrices((p) => ({ ...p, silver: e.target.value }))
+                }
+                placeholder="Price"
+                className="outline-none w-24 bg-transparent"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

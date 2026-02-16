@@ -8,10 +8,13 @@ export const getUserBookings = async (req, res) => {
     try {
         const user = req.auth().userId;
 
-        const bookings = await Booking.find({ user }).populate({
+        const bookingsRaw = await Booking.find({ user }).populate({
             path: "show",
             populate: { path: 'movie' }
         }).sort({ createdAt: -1 })
+
+        // Filter out bookings where show or movie was deleted
+        const bookings = bookingsRaw.filter(b => b.show && b.show.movie);
 
         res.json({ success: true, bookings })
 

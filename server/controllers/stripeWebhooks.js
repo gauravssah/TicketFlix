@@ -11,7 +11,7 @@ export const stripeWebhooks = async (req, res) => {
         event = stripeInstance.webhooks.constructEvent(
             req.body,
             sig,
-            process.env.STRIPE_WEBHOOK_SECRET // ✅ FIX
+            process.env.STRIPE_WEBHOOK_SECRET
         );
     } catch (err) {
         return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -22,6 +22,7 @@ export const stripeWebhooks = async (req, res) => {
             const session = event.data.object;
             const bookingId = session.metadata.bookingId;
 
+            // Mark booking as paid (seats already occupied at booking time)
             await Booking.findByIdAndUpdate(bookingId, {
                 isPaid: true,
                 paymentLink: ""

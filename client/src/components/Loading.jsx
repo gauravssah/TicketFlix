@@ -1,15 +1,36 @@
 import React, { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 
 function Loading() {
   const { nextUrl } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { axios } = useAppContext();
 
-  useEffect(() => {
+  const verifyAndRedirect = async () => {
+    try {
+      const sessionId = searchParams.get("session_id");
+
+      // If there's a Stripe session_id, verify the payment first
+      if (sessionId) {
+        await axios.post("/api/booking/verify-payment", { sessionId });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    // Redirect after verification (or after a delay)
     if (nextUrl) {
       setTimeout(() => {
         navigate("/" + nextUrl);
-      }, 8000);
+      }, 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (nextUrl) {
+      verifyAndRedirect();
     }
   }, []);
 

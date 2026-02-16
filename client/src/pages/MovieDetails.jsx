@@ -64,7 +64,7 @@ function MovieDetails() {
         { movieId: id },
         {
           headers: { Authorization: `Bearer ${await getToken()}` },
-        }
+        },
       );
 
       if (data.success) {
@@ -134,12 +134,16 @@ function MovieDetails() {
             </button>
 
             {/* Scroll to date selection section */}
-            <a
-              href="#dateSelect"
+            <button
+              onClick={() => {
+                document
+                  .getElementById("dateSelect")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
               className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
             >
               Buy Tickets
-            </a>
+            </button>
 
             {/* Add to favorites (UI only for now) */}
             <button

@@ -13,6 +13,8 @@ import timeFormat from "../lib/timeFormat";
 import { dateFormat } from "../lib/dateFormat";
 import { useAppContext } from "../context/AppContext";
 import { Link } from "react-router-dom";
+import { DownloadIcon } from "lucide-react";
+import generateTicket from "../lib/generateTicket";
 
 // ---------------- MY BOOKINGS PAGE COMPONENT ----------------
 function MyBookings() {
@@ -48,6 +50,8 @@ function MyBookings() {
   useEffect(() => {
     if (user) {
       getMyBookings();
+    } else {
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -105,13 +109,17 @@ function MyBookings() {
               </p>
 
               {/* Show "Pay Now" button only if booking is unpaid */}
-              {!item.isPaid && (
+              {!item.isPaid ? (
                 <Link
                   to={item.paymentLink}
                   className="bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer"
                 >
                   Pay Now
                 </Link>
+              ) : (
+                <span className="bg-green-600 px-4 py-1.5 mb-3 text-sm rounded-full font-medium text-white">
+                  Paid
+                </span>
               )}
             </div>
 
@@ -127,6 +135,17 @@ function MyBookings() {
                 {item.bookedSeats.join(", ")}
               </p>
             </div>
+
+            {/* Download Ticket Button (only for paid bookings) */}
+            {item.isPaid && (
+              <button
+                onClick={() => generateTicket(item, currency, image_base_url)}
+                className="flex items-center gap-1.5 mt-3 px-4 py-1.5 text-xs bg-primary/20 hover:bg-primary/40 border border-primary/30 rounded-full font-medium cursor-pointer transition active:scale-95"
+              >
+                <DownloadIcon className="w-3.5 h-3.5" />
+                Download Ticket
+              </button>
+            )}
           </div>
         </div>
       ))}

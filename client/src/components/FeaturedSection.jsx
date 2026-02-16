@@ -47,11 +47,22 @@ function FeaturedSection() {
         </button>
       </div>
 
-      {/* ---------------- MOVIE CARD GRID ---------------- */}
-      {/* Display only first 4 movies from dummy data */}
-      <div className="flex flex-wrap max-sm:justify-center gap-8 mt-8">
-        {shows.slice(0, 4).map((show) => (
-          <MovieCard key={show._id} movie={show} />
+      {/* ---------------- MOVIE CARDS ---------------- */}
+      {/* Horizontal scroll on mobile, grid on desktop */}
+      <div
+        className="flex gap-5 mt-8 max-sm:overflow-x-auto max-sm:snap-x max-sm:snap-mandatory
+          max-sm:scroll-smooth max-sm:-mx-6 max-sm:px-6 max-sm:pb-4 no-scrollbar
+          sm:flex-wrap sm:justify-start"
+      >
+        {shows.slice(0, 6).map((show, i) => (
+          <div
+            key={show._id}
+            className={`max-sm:snap-center max-sm:shrink-0 ${
+              i % 2 === 1 ? "max-sm:mt-6" : ""
+            }`}
+          >
+            <MovieCard movie={show} />
+          </div>
         ))}
       </div>
 

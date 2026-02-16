@@ -22,6 +22,28 @@ const checkSeatsAvailability = async (showId, selectedSeats) => {
 }
 
 
+// Helper to get section for a seat row
+const getSeatSection = (seatId) => {
+    const row = seatId.charAt(0).toUpperCase();
+    if (['A', 'B'].includes(row)) return 'premium';
+    if (['C', 'D', 'E', 'F'].includes(row)) return 'gold';
+    return 'silver';
+};
+
+// Calculate total amount based on seat sections
+const calculateAmount = (showData, selectedSeats) => {
+    const prices = showData.sectionPrices || {
+        premium: showData.showPrice,
+        gold: showData.showPrice,
+        silver: showData.showPrice,
+    };
+    return selectedSeats.reduce((total, seat) => {
+        const section = getSeatSection(seat);
+        return total + (prices[section] || showData.showPrice);
+    }, 0);
+};
+
+
 export const createBooking = async (req, res) => {
     try {
         const { userId } = req.auth();
@@ -42,10 +64,11 @@ export const createBooking = async (req, res) => {
         const booking = await Booking.create({
             user: userId,
             show: showId,
-            amount: showData.showPrice * selectedSeats.length,
+            amount: calculateAmount(showData, selectedSeats),
             bookedSeats: selectedSeats
         })
 
+        // Mark seats as occupied immediately to prevent double booking
         selectedSeats.map((seat) => {
             showData.occupiedSeats[seat] = userId;
         })
@@ -69,7 +92,7 @@ export const createBooking = async (req, res) => {
         }]
 
         const session = await stripeInstance.checkout.sessions.create({
-            success_url: `${origin}/loading/my-bookings`,
+            success_url: `${origin}/loading/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/my-bookings`,
             line_items: line_items,
             mode: 'payment',
@@ -92,7 +115,7 @@ export const createBooking = async (req, res) => {
     }
 }
 
-// 8:45  // 8:53
+// Get occupied seats from the Show model
 export const getOccupiedSeats = async (req, res) => {
     try {
         const { showId } = req.params;
@@ -101,6 +124,37 @@ export const getOccupiedSeats = async (req, res) => {
         const occupiedSeats = Object.keys(showData.occupiedSeats)
 
         res.json({ success: true, occupiedSeats });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+// ✅ Verify payment status with Stripe (works without webhook)
+export const verifyPayment = async (req, res) => {
+    try {
+        const { sessionId } = req.body;
+
+        const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
+
+        // Retrieve the checkout session from Stripe
+        const session = await stripeInstance.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status === 'paid') {
+            const bookingId = session.metadata.bookingId;
+
+            // Update booking as paid
+            await Booking.findByIdAndUpdate(bookingId, {
+                isPaid: true,
+                paymentLink: ""
+            });
+
+            return res.json({ success: true, message: "Payment verified successfully" });
+        }
+
+        res.json({ success: false, message: "Payment not completed" });
 
     } catch (error) {
         console.log(error.message);

@@ -43,7 +43,9 @@ const ListShows = () => {
               <th className="p-2 font-medium pl-5">Movie Name </th>
               <th className="p-2 font-medium">Show Time </th>
               <th className="p-2 font-medium">Total Bookings </th>
-              <th className="p-2 font-medium">Earnings </th>
+              <th className="p-2 font-medium">Premium </th>
+              <th className="p-2 font-medium">Gold </th>
+              <th className="p-2 font-medium">Silver </th>
             </tr>
           </thead>
 
@@ -58,9 +60,14 @@ const ListShows = () => {
                 <td className=" p-2">
                   {Object.keys(show.occupiedSeats).length}
                 </td>
-                <td className="p-2">
-                  {currency}{" "}
-                  {Object.keys(show.occupiedSeats).length * show.showPrice}
+                <td className="p-2 text-yellow-400">
+                  {currency} {show.sectionPrices?.premium || show.showPrice}
+                </td>
+                <td className="p-2 text-purple-400">
+                  {currency} {show.sectionPrices?.gold || show.showPrice}
+                </td>
+                <td className="p-2 text-gray-400">
+                  {currency} {show.sectionPrices?.silver || show.showPrice}
                 </td>
               </tr>
             ))}
