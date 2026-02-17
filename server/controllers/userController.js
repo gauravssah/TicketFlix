@@ -1,12 +1,37 @@
 import { clerkClient } from "@clerk/express";
 import Booking from "../models/Booking.js";
 import Movie from "../models/Movie.js";
+import Show from "../models/Show.js";
 
 
 // API Controller Function to Get User Bookings
 export const getUserBookings = async (req, res) => {
     try {
         const user = req.auth().userId;
+
+        // First clean up expired unpaid bookings for this user
+        const expiredBookings = await Booking.find({
+            user,
+            isPaid: false,
+            reservedUntil: { $lte: new Date() },
+        });
+
+        for (const booking of expiredBookings) {
+            const showData = await Show.findById(booking.show);
+            if (showData) {
+                for (const seat of booking.bookedSeats) {
+                    if (showData.occupiedSeats[seat]) {
+                        delete showData.occupiedSeats[seat];
+                    }
+                }
+                showData.markModified('occupiedSeats');
+                await showData.save();
+            }
+        }
+
+        if (expiredBookings.length > 0) {
+            await Booking.deleteMany({ _id: { $in: expiredBookings.map(b => b._id) } });
+        }
 
         const bookingsRaw = await Booking.find({ user }).populate({
             path: "show",

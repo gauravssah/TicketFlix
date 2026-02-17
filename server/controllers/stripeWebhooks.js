@@ -1,5 +1,6 @@
 import stripe from "stripe";
 import Booking from "../models/Booking.js";
+import { sendBookingEmail } from "../configs/nodemailer.js";
 
 export const stripeWebhooks = async (req, res) => {
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -27,6 +28,22 @@ export const stripeWebhooks = async (req, res) => {
                 isPaid: true,
                 paymentLink: ""
             });
+
+            // Send confirmation email directly
+            try {
+                const booking = await Booking.findById(bookingId)
+                    .populate("user")
+                    .populate({
+                        path: "show",
+                        populate: { path: "movie", model: "Movie" },
+                    });
+
+                if (booking && booking.user?.email) {
+                    await sendBookingEmail(booking.toObject());
+                }
+            } catch (emailErr) {
+                console.error('❌ Email send failed:', emailErr.message);
+            }
         }
 
         res.json({ received: true });

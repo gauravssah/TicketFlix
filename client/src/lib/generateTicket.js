@@ -33,75 +33,84 @@ const generateTicket = async (booking, currency) => {
     doc.setFillColor(...cardBg);
     doc.rect(0, 0, 62, H, "F");
 
-    // ─── LEFT PANEL: STYLED MOVIE NAME ───
+    // ─── LEFT PANEL: MOVIE POSTER ───
     const posterX = 6;
     const posterY = 8;
     const posterW = 50;
     const posterH = 72;
-
-    // Inner card background with gradient effect
-    doc.setFillColor(35, 30, 50);
-    doc.roundedRect(posterX, posterY, posterW, posterH, 3, 3, "F");
-
-    // Accent gradient strip at top of card
-    doc.setFillColor(...accent);
-    doc.roundedRect(posterX, posterY, posterW, 3, 3, 3, "F");
-    doc.setFillColor(35, 30, 50);
-    doc.rect(posterX, posterY + 2, posterW, 2, "F");
-
-    // Gold border
-    doc.setDrawColor(...gold);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(posterX, posterY, posterW, posterH, 3, 3, "S");
-
-    // Decorative label
-    doc.setFontSize(5.5);
-    doc.setTextColor(...gold);
-    doc.setFont("helvetica", "bold");
-    doc.text("- NOW SHOWING -", posterX + posterW / 2, posterY + 10, { align: "center" });
-
-    // Thin gold line under label
-    doc.setDrawColor(...gold);
-    doc.setLineWidth(0.2);
-    doc.line(posterX + 8, posterY + 13, posterX + posterW - 8, posterY + 13);
-
-    // Movie title - large, centered, word-wrapped (max 3 lines to avoid overlap)
     const title = booking.show.movie.title;
-    doc.setFontSize(14);
-    doc.setTextColor(...white);
-    doc.setFont("helvetica", "bold");
-    let titleLines = doc.splitTextToSize(title, posterW - 10);
-    if (titleLines.length > 3) titleLines = titleLines.slice(0, 3);
-    const lineH = 6.5;
-    const titleBlockH = titleLines.length * lineH;
-    const titleZoneTop = posterY + 16;
-    const titleZoneBot = posterY + posterH - 22;
-    const titleStartY = titleZoneTop + (titleZoneBot - titleZoneTop) / 2 - titleBlockH / 2 + lineH;
-    doc.text(titleLines, posterX + posterW / 2, titleStartY, { align: "center", lineHeightFactor: 1.2 });
-
-    // Thin gold line above genres
-    doc.setDrawColor(...gold);
-    doc.setLineWidth(0.2);
-    doc.line(posterX + 8, posterY + posterH - 20, posterX + posterW - 8, posterY + posterH - 20);
-
-    // Genre tags at bottom of card
+    const runtime = booking.show.movie.runtime;
+    const hrs = Math.floor(runtime / 60);
+    const mins = runtime % 60;
     const genres = booking.show.movie.genres
         .slice(0, 3)
         .map((g) => g.name)
         .join(" / ");
-    doc.setFontSize(5.5);
-    doc.setTextColor(...lightGray);
-    doc.setFont("helvetica", "normal");
-    doc.text(genres, posterX + posterW / 2, posterY + posterH - 14, { align: "center" });
 
-    // Runtime at very bottom of card
-    const runtime = booking.show.movie.runtime;
-    const hrs = Math.floor(runtime / 60);
-    const mins = runtime % 60;
-    doc.setFontSize(6);
-    doc.setTextColor(...accent);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${hrs}h ${mins}m`, posterX + posterW / 2, posterY + posterH - 8, { align: "center" });
+    // Try to load movie poster image
+    let posterLoaded = false;
+    try {
+        const posterUrl = `https://image.tmdb.org/t/p/w500${booking.show.movie.poster_path}`;
+        const imgData = await fetchImageAsDataURL(posterUrl);
+        if (imgData) {
+            // Draw poster filling the card area — clean, no text overlay
+            doc.addImage(imgData, "JPEG", posterX, posterY, posterW, posterH);
+            posterLoaded = true;
+        }
+    } catch (e) {
+        console.log("Poster load failed, using text fallback:", e.message);
+    }
+
+    // Fallback: text-only poster card (if image failed)
+    if (!posterLoaded) {
+        doc.setFillColor(35, 30, 50);
+        doc.roundedRect(posterX, posterY, posterW, posterH, 3, 3, "F");
+
+        doc.setFillColor(...accent);
+        doc.roundedRect(posterX, posterY, posterW, 3, 3, 3, "F");
+        doc.setFillColor(35, 30, 50);
+        doc.rect(posterX, posterY + 2, posterW, 2, "F");
+
+        doc.setFontSize(5.5);
+        doc.setTextColor(...gold);
+        doc.setFont("helvetica", "bold");
+        doc.text("- NOW SHOWING -", posterX + posterW / 2, posterY + 10, { align: "center" });
+
+        doc.setDrawColor(...gold);
+        doc.setLineWidth(0.2);
+        doc.line(posterX + 8, posterY + 13, posterX + posterW - 8, posterY + 13);
+
+        doc.setFontSize(14);
+        doc.setTextColor(...white);
+        doc.setFont("helvetica", "bold");
+        let titleLines = doc.splitTextToSize(title, posterW - 10);
+        if (titleLines.length > 3) titleLines = titleLines.slice(0, 3);
+        const lineH = 6.5;
+        const titleBlockH = titleLines.length * lineH;
+        const titleZoneTop = posterY + 16;
+        const titleZoneBot = posterY + posterH - 22;
+        const titleStartY = titleZoneTop + (titleZoneBot - titleZoneTop) / 2 - titleBlockH / 2 + lineH;
+        doc.text(titleLines, posterX + posterW / 2, titleStartY, { align: "center", lineHeightFactor: 1.2 });
+
+        doc.setDrawColor(...gold);
+        doc.setLineWidth(0.2);
+        doc.line(posterX + 8, posterY + posterH - 20, posterX + posterW - 8, posterY + posterH - 20);
+
+        doc.setFontSize(5.5);
+        doc.setTextColor(...lightGray);
+        doc.setFont("helvetica", "normal");
+        doc.text(genres, posterX + posterW / 2, posterY + posterH - 14, { align: "center" });
+
+        doc.setFontSize(6);
+        doc.setTextColor(...accent);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${hrs}h ${mins}m`, posterX + posterW / 2, posterY + posterH - 8, { align: "center" });
+    }
+
+    // Gold border around poster
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(posterX, posterY, posterW, posterH, 3, 3, "S");
 
     // ─── PERFORATED TEAR LINE ───
     doc.setDrawColor(80, 80, 95);
@@ -151,11 +160,11 @@ const generateTicket = async (booking, currency) => {
         : title;
     doc.text(truncTitle, rx, 24);
 
-    // ─── RUNTIME (right section) ───
+    // ─── GENRE + RUNTIME (right section, below title) ───
     doc.setFontSize(7);
     doc.setTextColor(...lightGray);
     doc.setFont("helvetica", "normal");
-    doc.text(`${hrs}h ${mins}m`, rx, 29);
+    doc.text(`${genres}  ·  ${hrs}h ${mins}m`, rx, 29);
 
     // ─── DETAIL GRID ───
     const gridY = 36;
@@ -358,6 +367,18 @@ function drawBarcodePDF(doc, x, y, w, h) {
         doc.setFillColor(gray, gray, gray + 15);
         doc.rect(x + i * barW + (barW - bw) / 2, y, bw, h, "F");
     }
+}
+
+// Fetch remote image and convert to base64 data URL for jsPDF
+async function fetchImageAsDataURL(url) {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
 
 export default generateTicket;

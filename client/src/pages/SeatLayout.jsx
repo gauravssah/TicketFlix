@@ -12,7 +12,7 @@ import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
 
 // Icons
-import { ArrowRightIcon, ClockIcon } from "lucide-react";
+import { ArrowRightIcon, ClockIcon, LoaderCircleIcon } from "lucide-react";
 
 // Utility to format ISO time
 import isoTimeFormat from "../lib/isoTimeFormat";
@@ -72,12 +72,17 @@ function SeatLayout() {
   const [selectedTime, setSelectedTime] = useState(null);
   const [show, setShow] = useState(null);
   const [occupiedSeats, setOccupiedSeats] = useState([]);
+  const [isBooking, setIsBooking] = useState(false);
 
   const navigate = useNavigate();
   const { axios, getToken, user } = useAppContext();
 
   // Current section prices from selected time
-  const prices = selectedTime?.sectionPrices || { premium: 0, gold: 0, silver: 0 };
+  const prices = selectedTime?.sectionPrices || {
+    premium: 0,
+    gold: 0,
+    silver: 0,
+  };
 
   // ─── FETCH SHOW ───
   const getShow = async () => {
@@ -95,8 +100,8 @@ function SeatLayout() {
   const handleSeatClick = (seatID) => {
     if (!selectedTime) return toast("Please select time first");
     if (occupiedSeats.includes(seatID)) return;
-    if (!selectedSeats.includes(seatID) && selectedSeats.length >= 5)
-      return toast("You can select max 5 seats");
+    if (!selectedSeats.includes(seatID) && selectedSeats.length >= 10)
+      return toast("You can select max 10 seats");
 
     setSelectedSeats((prev) =>
       prev.includes(seatID)
@@ -127,11 +132,12 @@ function SeatLayout() {
               key={seatID}
               onClick={() => handleSeatClick(seatID)}
               className={`relative h-7 w-7 sm:h-8 sm:w-8 rounded text-[10px] sm:text-xs font-medium cursor-pointer transition-all duration-200
-                ${isSelected
-                  ? `${section.bgSelected} text-white border ${section.borderColor} scale-105 shadow-lg`
-                  : isOccupied
-                    ? "opacity-25 cursor-not-allowed border border-red-500/40 bg-red-900/20 text-gray-500 line-through"
-                    : `border ${section.borderColor} ${section.bgHover} text-gray-300`
+                ${
+                  isSelected
+                    ? `${section.bgSelected} text-white border ${section.borderColor} scale-105 shadow-lg`
+                    : isOccupied
+                      ? "opacity-25 cursor-not-allowed border border-red-500/40 bg-red-900/20 text-gray-500 line-through"
+                      : `border ${section.borderColor} ${section.bgHover} text-gray-300`
                 }`}
             >
               {isOccupied ? "✕" : seatID}
@@ -212,6 +218,8 @@ function SeatLayout() {
       if (!selectedTime || !selectedSeats.length)
         return toast.error("Please select a time and seats");
 
+      setIsBooking(true);
+
       const { data } = await axios.post(
         "/api/booking/create",
         {
@@ -227,9 +235,11 @@ function SeatLayout() {
         window.location.href = data.url;
       } else {
         toast.error(data.message);
+        setIsBooking(false);
       }
     } catch (error) {
       toast.error(error.message);
+      setIsBooking(false);
     }
   };
 
@@ -258,9 +268,10 @@ function SeatLayout() {
                 key={item.time}
                 onClick={() => setSelectedTime(item)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition 
-                  ${selectedTime?.time === item.time
-                    ? "bg-primary text-white"
-                    : "hover:bg-primary/20"
+                  ${
+                    selectedTime?.time === item.time
+                      ? "bg-primary text-white"
+                      : "hover:bg-primary/20"
                   }`}
               >
                 <ClockIcon className="w-4 h-4" />
@@ -275,7 +286,10 @@ function SeatLayout() {
           <div className="bg-white/5 border border-gray-700/40 rounded-xl p-5">
             <p className="text-sm font-semibold mb-3">Seat Categories</p>
             {Object.entries(seatSections).map(([key, sec]) => (
-              <div key={key} className="flex items-center justify-between py-1.5">
+              <div
+                key={key}
+                className="flex items-center justify-between py-1.5"
+              >
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-sm bg-${sec.color}`} />
                   <span className="text-xs text-gray-300">{sec.label}</span>
@@ -296,16 +310,25 @@ function SeatLayout() {
               {selectedSeats.map((seat) => {
                 const sec = getSeatSection(seat);
                 return (
-                  <div key={seat} className="flex items-center justify-between text-xs">
-                    <span className="text-gray-300">{seat} ({seatSections[sec].label})</span>
-                    <span className="font-medium">{currency} {prices[sec]}</span>
+                  <div
+                    key={seat}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="text-gray-300">
+                      {seat} ({seatSections[sec].label})
+                    </span>
+                    <span className="font-medium">
+                      {currency} {prices[sec]}
+                    </span>
                   </div>
                 );
               })}
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700/50 text-sm font-bold">
               <span>Total</span>
-              <span className="text-primary">{currency} {totalAmount}</span>
+              <span className="text-primary">
+                {currency} {totalAmount}
+              </span>
             </div>
           </div>
         )}
@@ -348,10 +371,25 @@ function SeatLayout() {
         {selectedSeats.length > 0 && (
           <button
             onClick={bookTickets}
-            className="flex items-center gap-2 mt-12 px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-full font-medium cursor-pointer active:scale-95 shadow-lg shadow-primary/20"
+            disabled={isBooking}
+            className={`flex items-center justify-center gap-2 mt-12 px-10 py-3 text-sm rounded-full font-medium shadow-lg shadow-primary/20 transition-all duration-300
+              ${
+                isBooking
+                  ? "bg-primary/60 cursor-not-allowed scale-95"
+                  : "bg-primary hover:bg-primary-dull cursor-pointer active:scale-95"
+              }`}
           >
-            Pay {currency} {totalAmount}
-            <ArrowRightIcon strokeWidth={3} className="w-4 h-4" />
+            {isBooking ? (
+              <>
+                <LoaderCircleIcon className="w-4 h-4 animate-spin" />
+                <span>Redirecting to Payment...</span>
+              </>
+            ) : (
+              <>
+                Pay {currency} {totalAmount}
+                <ArrowRightIcon strokeWidth={3} className="w-4 h-4" />
+              </>
+            )}
           </button>
         )}
       </div>

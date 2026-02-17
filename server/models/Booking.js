@@ -8,6 +8,7 @@ const
         bookedSeats: { type: Array, required: true },
         isPaid: { type: Boolean, default: false },
         paymentLink: { type: String },
+        reservedUntil: { type: Date },
     }, { timestamps: true })
 
 
