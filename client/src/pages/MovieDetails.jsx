@@ -9,7 +9,7 @@ import { dummyDateTimeData, dummyShowsData } from "../assets/assets";
 
 // Reusable UI components
 import BlurCircle from "../components/BlurCircle";
-import { Heart, PlayCircleIcon, StarIcon } from "lucide-react";
+import { Heart, PlayCircleIcon, StarIcon, CalendarOffIcon } from "lucide-react";
 
 // Utility to format runtime (minutes → 1h 45m)
 import timeFormat from "../lib/timeFormat";
@@ -42,16 +42,42 @@ function MovieDetails() {
 
   // Local state to store current movie/show details
   const [show, setShow] = useState(null);
+  // Whether this movie has booking shows or is TMDB-only
+  const [hasShows, setHasShows] = useState(false);
+  // Loading state
+  const [loading, setLoading] = useState(true);
 
-  // Fetch current movie data from dummyShowsData by ID
+  // Fetch current movie data — first try local DB, then fallback to TMDB
   const getShow = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get(`/api/show/${id}`);
-      if (data.success) {
+      if (data.success && data.movie) {
+        // Movie exists in local DB (has shows or was added before)
         setShow(data);
+        setHasShows(Object.keys(data.dateTime || {}).length > 0);
+      } else {
+        // Movie not in local DB → fetch from TMDB
+        const { data: tmdbData } = await axios.get(`/api/show/tmdb/${id}`);
+        if (tmdbData.success && tmdbData.movie) {
+          setShow({ movie: tmdbData.movie, dateTime: {} });
+          setHasShows(false);
+        }
       }
     } catch (error) {
       console.log(error);
+      // Try TMDB fallback on any error
+      try {
+        const { data: tmdbData } = await axios.get(`/api/show/tmdb/${id}`);
+        if (tmdbData.success && tmdbData.movie) {
+          setShow({ movie: tmdbData.movie, dateTime: {} });
+          setHasShows(false);
+        }
+      } catch (tmdbError) {
+        console.log("TMDB fallback also failed:", tmdbError);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,16 +160,22 @@ function MovieDetails() {
             </button>
 
             {/* Scroll to date selection section */}
-            <button
-              onClick={() => {
-                document
-                  .getElementById("dateSelect")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
-              }}
-              className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
-            >
-              Buy Tickets
-            </button>
+            {hasShows ? (
+              <button
+                onClick={() => {
+                  document
+                    .getElementById("dateSelect")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
+              >
+                Buy Tickets
+              </button>
+            ) : (
+              <span className="px-6 py-3 text-sm bg-gray-700 text-gray-400 rounded-md font-medium">
+                No Shows Available
+              </span>
+            )}
 
             {/* Add to favorites (UI only for now) */}
             <button
@@ -182,7 +214,31 @@ function MovieDetails() {
 
       {/* --------------- DATE & TIME SELECTION (SHOW BOOKING) --------------- */}
       {/* Pass dateTime mapping + current movie id */}
-      <DateSelect dateTime={show.dateTime} id={id} />
+      {hasShows ? (
+        <DateSelect dateTime={show.dateTime} id={id} />
+      ) : (
+        <div className="mt-25 mb-25">
+          <div className="flex flex-col items-center justify-center gap-4 p-10 bg-white/5 border border-white/10 rounded-xl text-center">
+            <CalendarOffIcon className="w-12 h-12 text-gray-500" />
+            <h3 className="text-xl font-semibold text-white">
+              No Shows Available
+            </h3>
+            <p className="text-gray-400 text-sm max-w-md">
+              This movie doesn't have any scheduled shows for booking right now.
+              Check back later or explore other movies currently showing.
+            </p>
+            <button
+              onClick={() => {
+                navigate("/movies");
+                scrollTo(0, 0);
+              }}
+              className="mt-2 px-8 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
+            >
+              Browse Available Movies
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* --------------- RECOMMENDED MOVIES SECTION --------------- */}
       <p className="text-lg font-medium mt-20 mb-8">You May Also Like</p>
@@ -206,9 +262,29 @@ function MovieDetails() {
         </button>
       </div>
     </div>
-  ) : (
-    // ================= LOADING STATE (WHEN show IS NULL) =================
+  ) : loading ? (
+    // ================= LOADING STATE =================
     <Loading />
+  ) : (
+    // ================= ERROR STATE (MOVIE NOT FOUND) =================
+    <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
+      <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        Movie Not Found
+      </h1>
+      <p className="text-gray-400 max-w-md">
+        We couldn't find details for this movie. It may have been removed or the
+        ID is invalid.
+      </p>
+      <button
+        onClick={() => {
+          navigate("/movies");
+          scrollTo(0, 0);
+        }}
+        className="mt-6 px-6 py-3 bg-primary cursor-pointer hover:bg-primary-dull transition rounded-full font-medium"
+      >
+        Browse Movies
+      </button>
+    </div>
   );
 }
 

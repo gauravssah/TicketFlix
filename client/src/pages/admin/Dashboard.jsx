@@ -3,10 +3,10 @@ import {
   CircleDollarSignIcon,
   PlayCircleIcon,
   StarIcon,
+  Trash2Icon,
   UsersIcon,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { dummyDashboardData } from "../../assets/assets";
 import Loading from "../../components/Loading";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
@@ -15,7 +15,7 @@ import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 
 const Dashboard = () => {
-  const { axios, getToken, user, image_base_url } = useAppContext();
+  const { axios, getToken, user, image_base_url, fetchShows } = useAppContext();
 
   const currency = import.meta.env.VITE_CURRENCY;
 
@@ -68,13 +68,30 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteShow = async (showId) => {
+    if (!confirm("Are you sure you want to delete this show?")) return;
+    try {
+      const { data } = await axios.delete(`/api/admin/show/${showId}`, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      if (data.success) {
+        toast.success(data.message);
+        fetchDashboardData();
+        fetchShows();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete show");
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
   }, [user]);
-
-
 
   return !loading ? (
     <>
@@ -105,7 +122,7 @@ const Dashboard = () => {
         {dashboardData.activeShows.map((show) => (
           <div
             key={show._id}
-            className=" w-55 rounded-lg overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 hover:-translate-y-1 transition duration-300"
+            className="relative w-55 rounded-lg overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 hover:-translate-y-1 transition duration-300 group"
           >
             <img
               src={image_base_url + show.movie.poster_path}
@@ -113,21 +130,27 @@ const Dashboard = () => {
               className="h-60 w-full object-cover"
             />
 
-            <p className=" font-medium p-2 truncate">{show.movie.title}</p>
+            {/* Delete button */}
+            <button
+              onClick={() => handleDeleteShow(show._id)}
+              className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-600 text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              title="Delete this show"
+            >
+              <Trash2Icon className="w-4 h-4" />
+            </button>
 
-            <div className=" flex items-center justify-between px-2">
-              <p className=" text-lg font-medium">
+            <p className="font-medium p-2 truncate">{show.movie.title}</p>
+
+            <div className="flex items-center justify-between px-2">
+              <p className="text-lg font-medium">
                 {currency} {show.showPrice}
               </p>
-              <p
-                className=" flex items-center gap-1 text-sm text-gray-400 mt-1
-               pr-1"
-              >
-                <StarIcon className=" w-4 h-4 text-primary fill-primary" />
+              <p className="flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1">
+                <StarIcon className="w-4 h-4 text-primary fill-primary" />
                 {show.movie.vote_average.toFixed(1)}
               </p>
             </div>
-            <p className=" px-2 pt-2 text-sm text-gray-500">
+            <p className="px-2 pt-2 text-sm text-gray-500">
               {dateFormat(show.showDateTime)}
             </p>
           </div>

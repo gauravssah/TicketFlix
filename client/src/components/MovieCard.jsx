@@ -15,7 +15,7 @@ function MovieCard({ movie }) {
 
   return (
     <div
-      className="group relative flex flex-col w-64 sm:w-66 rounded-2xl overflow-hidden
+      className="group relative flex flex-col w-full sm:w-66 rounded-2xl overflow-hidden
         bg-white/5 border border-white/10 backdrop-blur-sm
         hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10
         transition-all duration-300 cursor-pointer"
@@ -26,7 +26,7 @@ function MovieCard({ movie }) {
         <img
           src={image_base_url + movie.backdrop_path}
           alt={movie.title}
-          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="h-44 sm:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {/* Rating badge */}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full text-xs">

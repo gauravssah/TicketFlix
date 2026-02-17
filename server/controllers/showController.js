@@ -41,6 +41,72 @@ export const getUpcomingMovies = async (req, res) => {
     }
 };
 
+// API to search movies from TMDB API
+export const searchMovies = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query || query.trim().length === 0) {
+            return res.json({ success: true, movies: [] });
+        }
+
+        const { data } = await axios.get(
+            `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`,
+            tmdbConfig
+        );
+
+        // Return top 8 results with relevant fields
+        const movies = data.results.slice(0, 8).map((m) => ({
+            id: m.id,
+            title: m.title,
+            poster_path: m.poster_path,
+            backdrop_path: m.backdrop_path,
+            release_date: m.release_date,
+            vote_average: m.vote_average,
+            overview: m.overview,
+        }));
+
+        res.json({ success: true, movies });
+    } catch (error) {
+        console.log("TMDB Search Error:", error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to get movie details from TMDB (for movies not in local DB)
+export const getMovieDetails = async (req, res) => {
+    try {
+        const { movieId } = req.params;
+
+        const [movieRes, creditsRes] = await Promise.all([
+            axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, tmdbConfig),
+            axios.get(`https://api.themoviedb.org/3/movie/${movieId}/credits`, tmdbConfig),
+        ]);
+
+        const m = movieRes.data;
+        const credits = creditsRes.data;
+
+        const movie = {
+            _id: m.id,
+            title: m.title,
+            overview: m.overview,
+            poster_path: m.poster_path,
+            backdrop_path: m.backdrop_path,
+            genres: m.genres,
+            casts: credits.cast || [],
+            release_date: m.release_date,
+            original_language: m.original_language,
+            tagline: m.tagline || "",
+            vote_average: m.vote_average,
+            runtime: m.runtime,
+        };
+
+        res.json({ success: true, movie });
+    } catch (error) {
+        console.log("TMDB Details Error:", error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // API to add a new show to the database
 export const addShow = async (req, res) => {
     try {

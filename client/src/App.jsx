@@ -9,6 +9,7 @@ import MyBookings from "./pages/MyBookings";
 import Favorite from "./pages/Favorite";
 import Theaters from "./pages/Theaters";
 import Releases from "./pages/Releases";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
 import Layout from "./pages/admin/Layout";
@@ -39,6 +40,7 @@ function App() {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/loading/:nextUrl" element={<Loading />} />
         <Route path="/favorite" element={<Favorite />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
 
         {/* Admin */}
 

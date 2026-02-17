@@ -1,103 +1,187 @@
 import React from "react";
 import { assets } from "../assets/assets";
 import { Link } from "react-router-dom";
+import {
+  MailIcon,
+  PhoneIcon,
+  MapPinIcon,
+  GithubIcon,
+  LinkedinIcon,
+  TwitterIcon,
+  InstagramIcon,
+  HeartIcon,
+  FilmIcon,
+} from "lucide-react";
+
+const quickLinks = [
+  { label: "Home", to: "/" },
+  { label: "Movies", to: "/movies" },
+  { label: "Theaters", to: "/theaters" },
+  { label: "Favorites", to: "/favorite" },
+  { label: "My Bookings", to: "/my-bookings" },
+];
+
+const supportLinks = [{ label: "Privacy Policy", to: "/privacy" }];
+
+const contactInfo = [
+  { icon: PhoneIcon, text: "+91 98765 43210", href: "tel:+919876543210" },
+  {
+    icon: MailIcon,
+    text: "support@ticketflix.com",
+    href: "mailto:support@ticketflix.com",
+  },
+  { icon: MapPinIcon, text: "India" },
+];
+
+const socialLinks = [
+  { icon: TwitterIcon, href: "#", label: "Twitter" },
+  { icon: InstagramIcon, href: "#", label: "Instagram" },
+  { icon: LinkedinIcon, href: "#", label: "LinkedIn" },
+  { icon: GithubIcon, href: "#", label: "GitHub" },
+];
 
 function Footer() {
   return (
-    <footer className="px-6 mt-30 pt-8 md:px-16 lg:px-36 w-full text-gray-300 bg-black/40">
-      {/* ---------------- TOP FOOTER SECTION ---------------- */}
-      <div className="flex flex-col md:flex-row justify-between w-full gap-10 border-b border-gray-600 pb-10">
-        {/* -------- LEFT: LOGO + ABOUT -------- */}
-        <div className="md:max-w-96">
-          <img alt="TicketFlix Logo" className="h-15" src={assets.logo} />
+    <footer className="relative mt-30 w-full text-gray-300 overflow-hidden">
+      {/* Gradient Top Border */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
 
-          <p className="mt-6 text-sm leading-relaxed">
-            TicketFlix is your one-stop destination for booking movie tickets
-            online. Discover the latest movies, explore nearby theaters, watch
-            trailers, and book your favorite shows instantly with a seamless
-            experience.
-          </p>
+      {/* Glow Effect Behind Footer */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
 
-          {/* App Download Buttons */}
-          <div className="flex items-center gap-2 mt-4">
-            <img
-              src={assets.googlePlay}
-              alt="Google Play"
-              className="h-10 w-auto border border-white rounded cursor-pointer"
-            />
-            <img
-              src={assets.appStore}
-              alt="App Store"
-              className="h-10 w-auto border border-white rounded cursor-pointer"
-            />
+      <div className="relative bg-gradient-to-b from-black/60 to-black/80 backdrop-blur-sm px-6 md:px-16 lg:px-36 pt-14 pb-6">
+        {/* ============ MAIN FOOTER GRID ============ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-12">
+          {/* -------- COL 1: BRAND -------- */}
+          <div className="lg:col-span-1">
+            <Link to="/" className="inline-block">
+              <img alt="TicketFlix Logo" className="h-12" src={assets.logo} />
+            </Link>
+
+            <p className="mt-5 text-sm leading-relaxed text-gray-400 max-w-xs">
+              Your one-stop destination for booking movie tickets online.
+              Discover movies, explore theaters, and book shows instantly.
+            </p>
+
+            {/* App Download Buttons */}
+            <div className="flex items-center gap-3 mt-6">
+              <img
+                src={assets.googlePlay}
+                alt="Google Play"
+                className="h-10 w-auto border border-gray-600 hover:border-primary/60 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105"
+              />
+              <img
+                src={assets.appStore}
+                alt="App Store"
+                className="h-10 w-auto border border-gray-600 hover:border-primary/60 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* -------- RIGHT: LINKS + CONTACT -------- */}
-        <div className="flex-1 flex items-start md:justify-end gap-20 md:gap-40">
-          {/* Company Links */}
+          {/* -------- COL 2: QUICK LINKS -------- */}
           <div>
-            <h2 className="font-semibold mb-5">Company</h2>
-            <ul className="text-sm space-y-2">
-              <li>
-                <Link to="/" className="hover:text-white transition">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/movies" className="hover:text-white transition">
-                  Movies
-                </Link>
-              </li>
-              <li>
-                <Link to="/theaters" className="hover:text-white transition">
-                  Theaters
-                </Link>
-              </li>
-              <li>
-                <Link to="/favorite" className="hover:text-white transition">
-                  Favorites
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="hover:text-white transition">
-                  Privacy Policy
-                </Link>
-              </li>
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5 flex items-center gap-2">
+              <FilmIcon className="w-4 h-4 text-primary" />
+              Quick Links
+            </h3>
+            <ul className="space-y-3">
+              {quickLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-gray-400 hover:text-primary transition-colors duration-200 hover:translate-x-1 inline-block"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact Section */}
+          {/* -------- COL 3: SUPPORT -------- */}
           <div>
-            <h2 className="font-semibold mb-5">Get in Touch</h2>
-            <div className="text-sm space-y-2">
-              <p>📞 +91 98765 43210</p>
-              <p>📧 support@ticketflix.com</p>
-              <p>📍 India</p>
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5 flex items-center gap-2">
+              <HeartIcon className="w-4 h-4 text-primary" />
+              Support
+            </h3>
+            <ul className="space-y-3">
+              {supportLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-gray-400 hover:text-primary transition-colors duration-200 hover:translate-x-1 inline-block"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* -------- COL 4: CONTACT -------- */}
+          <div>
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5 flex items-center gap-2">
+              <MailIcon className="w-4 h-4 text-primary" />
+              Get in Touch
+            </h3>
+            <ul className="space-y-4">
+              {contactInfo.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 group">
+                  <item.icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      className="text-sm text-gray-400 group-hover:text-white transition-colors duration-200"
+                    >
+                      {item.text}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">{item.text}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 mt-6">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/10 text-gray-400 hover:text-primary transition-all duration-300"
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ---------------- BOTTOM COPYRIGHT + DEVELOPER CREDIT ---------------- */}
-      <div className="pt-4 text-center text-sm pb-5 space-y-2">
-        <p>
-          Copyright {new Date().getFullYear()} ©{" "}
-          <span className="font-medium">TicketFlix</span>. All Rights Reserved.
-        </p>
+        {/* ============ BOTTOM BAR ============ */}
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()}{" "}
+            <span className="text-gray-400 font-medium">TicketFlix</span>. All
+            Rights Reserved.
+          </p>
 
-        {/* ✅ YOUR NAME + LINKEDIN */}
-        <p className="text-gray-400">
-          Developed by{" "}
-          <a
-            href="https://www.linkedin.com/in/gauravssah/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-medium"
-          >
-            Gaurav Sah
-          </a>
-        </p>
+          <p className="text-xs text-gray-500">
+            Developed with{" "}
+            <HeartIcon className="w-3 h-3 inline text-primary fill-primary" />{" "}
+            by{" "}
+            <a
+              href="https://www.linkedin.com/in/gauravssah/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary-dull font-medium transition-colors duration-200"
+            >
+              Gaurav Sah
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

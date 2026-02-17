@@ -67,3 +67,32 @@ export const getAllBookings = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
+// API to delete a show
+export const deleteShow = async (req, res) => {
+    try {
+        const { showId } = req.params;
+
+        const show = await Show.findById(showId);
+        if (!show) {
+            return res.json({ success: false, message: "Show not found" });
+        }
+
+        // Check if there are paid bookings for this show
+        const paidBookings = await Booking.countDocuments({ show: showId, isPaid: true });
+        if (paidBookings > 0) {
+            return res.json({ success: false, message: `Cannot delete: ${paidBookings} paid booking(s) exist for this show` });
+        }
+
+        // Delete any unpaid bookings for this show
+        await Booking.deleteMany({ show: showId, isPaid: false });
+
+        // Delete the show
+        await Show.findByIdAndDelete(showId);
+
+        res.json({ success: true, message: "Show deleted successfully" });
+    } catch (error) {
+        console.error("Delete Show Error:", error.message);
+        res.json({ success: false, message: error.message });
+    }
+}

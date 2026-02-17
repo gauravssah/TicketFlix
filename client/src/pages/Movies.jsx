@@ -1,9 +1,6 @@
 // Import React for building the component
 import React from "react";
 
-// Import dummy movies data
-import { dummyShowsData } from "../assets/assets";
-
 // Import reusable Movie Card component
 import MovieCard from "../components/MovieCard";
 
@@ -16,7 +13,7 @@ function Movies() {
   const { shows } = useAppContext();
 
   // Check if movies are available in the data
-  return dummyShowsData.length > 0 ? (
+  return shows.length > 0 ? (
     // ---------------- MOVIES LIST SECTION ----------------
     <div className="relative my-40 mb-60 px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]">
       {/* Decorative Blur Effects */}
