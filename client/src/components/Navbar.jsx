@@ -15,6 +15,7 @@ import {
   XIcon,
   LoaderIcon,
   TicketIcon,
+  LayoutDashboard,
 } from "lucide-react";
 
 // Clerk authentication hooks & components
@@ -22,7 +23,8 @@ import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
 import { useAppContext } from "../context/AppContext";
 
 function Navbar() {
-  const { favoriteMovies, shows, image_base_url, axios } = useAppContext();
+  const { favoriteMovies, shows, image_base_url, axios, isAdmin } =
+    useAppContext();
 
   // State to control mobile menu open/close
   const [isOpen, setIsOpen] = useState(false);
@@ -208,6 +210,13 @@ function Navbar() {
           <UserButton>
             {/* Custom Dropdown Menu Items */}
             <UserButton.MenuItems>
+              {isAdmin && (
+                <UserButton.Action
+                  label="Dashboard"
+                  labelIcon={<LayoutDashboard width={15} />}
+                  onClick={() => navigate("/admin")}
+                />
+              )}
               <UserButton.Action
                 label="My Bookings"
                 labelIcon={<TicketPlus width={15} />}
