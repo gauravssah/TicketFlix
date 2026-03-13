@@ -1,5 +1,9 @@
 # 🎬 TicketFlix — Online Movie Ticket Booking System
 
+🚀 **Live Demo:** [https://ticketflix-eight.vercel.app](https://ticketflix-eight.vercel.app)
+
+👤 **Author LinkedIn:** [gauravssah](https://www.linkedin.com/in/gauravssah)
+
 A **full-stack**, production-ready movie ticket booking platform built with the **MERN stack** (MongoDB, Express.js, React, Node.js). Users can browse movies, select seats across tiered sections, pay securely via **Stripe**, and receive PDF tickets and email confirmations — all powered by **Clerk** authentication, **TMDB** movie data, **Inngest** background jobs, and deployed on **Vercel**.
 
 ---
