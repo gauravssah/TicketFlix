@@ -9,12 +9,27 @@ function Loading() {
   const { axios } = useAppContext();
 
   const verifyAndRedirect = async () => {
+    let bookingMessage = null;
+
     try {
       const sessionId = searchParams.get("session_id");
 
       // If there's a Stripe session_id, verify the payment first
       if (sessionId) {
-        await axios.post("/api/booking/verify-payment", { sessionId });
+        const { data } = await axios.post("/api/booking/verify-payment", {
+          sessionId,
+        });
+
+        if (
+          data?.success &&
+          ["sent", "already-sent"].includes(data?.emailStatus) &&
+          data?.email
+        ) {
+          bookingMessage = {
+            email: data.email,
+            status: data.emailStatus,
+          };
+        }
       }
     } catch (error) {
       console.log(error);
@@ -23,7 +38,9 @@ function Loading() {
     // Redirect after verification (or after a delay)
     if (nextUrl) {
       setTimeout(() => {
-        navigate("/" + nextUrl);
+        navigate("/" + nextUrl, {
+          state: bookingMessage ? { bookingMessage } : undefined,
+        });
       }, 3000);
     }
   };

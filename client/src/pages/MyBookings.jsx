@@ -1,5 +1,6 @@
 // React hooks for state management & lifecycle
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 // Reusable UI components
 import Loading from "../components/Loading";
@@ -9,7 +10,7 @@ import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
 import { dateFormat } from "../lib/dateFormat";
 import { useAppContext } from "../context/AppContext";
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ClockIcon, DownloadIcon, AlertTriangleIcon } from "lucide-react";
 import generateTicket from "../lib/generateTicket";
 
@@ -85,12 +86,18 @@ function MyBookings() {
   const currency = import.meta.env.VITE_CURRENCY;
 
   const { axios, getToken, user, image_base_url } = useAppContext();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // State to store all user bookings
   const [bookings, setBookings] = useState([]);
 
   // State to manage loading indicator
   const [isLoading, setIsLoading] = useState(true);
+  const [bookingMessage, setBookingMessage] = useState(
+    location.state?.bookingMessage || null,
+  );
+  const hasShownBookingToast = useRef(false);
 
   // ---------------- FETCH USER BOOKINGS ----------------
   const getMyBookings = useCallback(async () => {
@@ -116,6 +123,15 @@ function MyBookings() {
     }, 3000);
   }, []);
 
+  const handlePayNow = useCallback((paymentLink) => {
+    if (!paymentLink) {
+      toast.error("Payment link is not available for this booking.");
+      return;
+    }
+
+    window.location.href = paymentLink;
+  }, []);
+
   // Load bookings when component mounts
   useEffect(() => {
     if (user) {
@@ -124,6 +140,26 @@ function MyBookings() {
       setIsLoading(false);
     }
   }, [user, getMyBookings]);
+
+  useEffect(() => {
+    if (!location.state?.bookingMessage) return;
+
+    setBookingMessage(location.state.bookingMessage);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (!bookingMessage || hasShownBookingToast.current) return;
+
+    const isAlreadySent = bookingMessage.status === "already-sent";
+    toast.success(
+      `Ticket sent to your email id: ${bookingMessage.email}. Check your email or download it from My Bookings.`,
+      {
+        duration: isAlreadySent ? 6000 : 7000,
+      },
+    );
+    hasShownBookingToast.current = true;
+  }, [bookingMessage]);
 
   // ---------------- CONDITIONAL RENDERING ----------------
   return !isLoading ? (
@@ -137,6 +173,14 @@ function MyBookings() {
 
       {/* Page Heading */}
       <h1 className="text-lg font-semibold mb-4">My Bookings</h1>
+
+      {bookingMessage && (
+        <div className="mb-6 max-w-3xl rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-100">
+          Ticket booked successfully. Your ticket has been sent to your email
+          id: <span className="font-semibold">{bookingMessage.email}</span>.
+          Please check your email or download it from My Bookings.
+        </div>
+      )}
 
       {bookings.length === 0 && (
         <p className="text-gray-400 mt-6">No bookings yet.</p>
@@ -202,13 +246,14 @@ function MyBookings() {
                       Expired
                     </span>
                   ) : (
-                    <Link
-                      to={item.paymentLink}
+                    <button
+                      type="button"
+                      onClick={() => handlePayNow(item.paymentLink)}
                       className="relative bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer hover:bg-primary-dull transition overflow-hidden group"
                     >
                       <span className="relative z-10">Pay Now</span>
                       <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
-                    </Link>
+                    </button>
                   )
                 ) : (
                   <span className="bg-green-600 px-4 py-1.5 mb-3 text-sm rounded-full font-medium text-white">

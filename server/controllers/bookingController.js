@@ -206,42 +206,63 @@ export const verifyPayment = async (req, res) => {
 
         if (session.payment_status === 'paid') {
             const bookingId = session.metadata.bookingId;
+            const existingBooking = await Booking.findById(bookingId);
 
-            // Update booking as paid
-            const updatedBooking = await Booking.findByIdAndUpdate(bookingId, {
-                isPaid: true,
-                paymentLink: ""
-            }, { new: true });
-
-            if (!updatedBooking) {
+            if (!existingBooking) {
                 console.error('❌ Booking not found in DB:', bookingId, '(may have been cleaned up by reservation timer)');
                 return res.json({ success: true, message: "Payment verified but booking was expired" });
             }
 
+            const wasAlreadyPaid = existingBooking.isPaid;
+
+            // Update booking as paid
+            await Booking.findByIdAndUpdate(bookingId, {
+                isPaid: true,
+                paymentLink: ""
+            }, { new: true });
+
             console.log('✅ Booking marked as paid:', bookingId);
 
+            let email = "";
+            let emailStatus = wasAlreadyPaid ? "already-sent" : "unavailable";
+
             // Send confirmation email directly
-            try {
-                const booking = await Booking.findById(bookingId)
-                    .populate("user")
-                    .populate({
-                        path: "show",
-                        populate: { path: "movie", model: "Movie" },
-                    });
+            const booking = await Booking.findById(bookingId)
+                .populate("user")
+                .populate({
+                    path: "show",
+                    populate: { path: "movie", model: "Movie" },
+                });
 
-                console.log('📧 Email data — User:', booking?.user?.name, '|', booking?.user?.email,
-                    '| Movie:', booking?.show?.movie?.title);
+            console.log('📧 Email data — User:', booking?.user?.name, '|', booking?.user?.email,
+                '| Movie:', booking?.show?.movie?.title);
 
-                if (booking && booking.user?.email) {
-                    await sendBookingEmail(booking.toObject());
-                } else {
-                    console.error('❌ Missing email data — user:', !!booking?.user, 'email:', booking?.user?.email);
+            email = booking?.user?.email || "";
+
+            if (!wasAlreadyPaid) {
+                try {
+                    if (booking && booking.user?.email) {
+                        await sendBookingEmail(booking.toObject());
+                        emailStatus = "sent";
+                    } else {
+                        console.error('❌ Missing email data — user:', !!booking?.user, 'email:', booking?.user?.email);
+                    }
+                } catch (emailErr) {
+                    emailStatus = "failed";
+                    console.error('❌ Email send failed:', emailErr.message);
                 }
-            } catch (emailErr) {
-                console.error('❌ Email send failed:', emailErr.message);
+            } else if (!email) {
+                emailStatus = "unavailable";
+            } else {
+                emailStatus = "already-sent";
             }
 
-            return res.json({ success: true, message: "Payment verified successfully" });
+            return res.json({
+                success: true,
+                message: "Payment verified successfully",
+                email,
+                emailStatus,
+            });
         }
 
         res.json({ success: false, message: "Payment not completed" });
